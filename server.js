@@ -26,7 +26,24 @@ app.use(express.json());
 // Make public a static folder
 app.use(express.static("public"));
 
-app.engine("handlebars", exphbs({ defaultLayout: "main" }));
+app.engine("handlebars", exphbs({
+    defaultLayout: "main",
+    helpers: {
+        rowOpen: function(int) {
+            if (int % 2 === 0)
+                return `<div class="row my-4">
+                <div class="col-6">`;
+            else
+                return `<div class="col-6">`;
+        },
+        rowClose: function(int) {
+            if (int % 2 === 0)
+                return `</div>`;
+            else
+                return `</div></div>`;
+        }
+    }
+}));
 app.set("view engine", "handlebars");
 
 // If deployed, use the deployed database. Otherwise use the local mongoHeadlines database
@@ -83,7 +100,7 @@ app.get("/articles/:id", function(req, res) {
     // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
     db.Article.findOne({ _id: req.params.id })
         // ..and populate all of the notes associated with it
-        .populate("note")
+        .populate("comment")
         .then(function(dbArticle) {
             // If we were able to successfully find an Article with the given id, send it back to the client
             res.json(dbArticle);
@@ -97,12 +114,12 @@ app.get("/articles/:id", function(req, res) {
 // Route for saving/updating an Article's associated Note
 app.post("/articles/:id", function(req, res) {
     // Create a new note and pass the req.body to the entry
-    db.Note.create(req.body)
-        .then(function(dbNote) {
+    db.Comment.create(req.body)
+        .then(function(dbComment) {
             // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
             // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
             // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-            return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
+            return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbComment._id }, { new: true });
         })
         .then(function(dbArticle) {
             // If we were able to successfully update an Article, send it back to the client
@@ -116,5 +133,5 @@ app.post("/articles/:id", function(req, res) {
 
 // Start the server
 app.listen(PORT, function() {
-    console.log("App running on port " + PORT + "!");
+    console.log("App running at http://localhost:" + PORT);
 });
