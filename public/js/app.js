@@ -1,5 +1,6 @@
 $(function() {
-    $("#getNews").click(() => {
+    $("#getNews").click(function() {
+        $(this).text("Gathering new articles. Please Wait");
         $.get("/scrape").then(() => {
             location.reload();
         })

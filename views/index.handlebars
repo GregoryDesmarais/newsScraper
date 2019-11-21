@@ -1,3 +1,4 @@
+{{#if articles}}
 {{#each articles}}
 {{#rowOpen @index}}
 {{/rowOpen}}
@@ -8,7 +9,7 @@
     <div class="card-body summary">{{summary}}</div>
     <div class="card-footer">
         <a href="{{link}}" class="btn btn-primary" target="_blank">Go to Article</a>
-        <button data-id="{{_id}}" class='btn btn-secondary comment' data-toggle="modal" data-target='#modal{{_id}}'>Add a comment</button>
+        <button data-id="{{_id}}" class='btn btn-secondary comment' data-toggle="modal" data-target='#modal{{_id}}'>View/Add Comments({{comment.length}})</button>
     </div>
 </div>
 
@@ -43,3 +44,13 @@
 {{#rowClose @index}}
 {{/rowClose}}
 {{/each}}
+{{else}}
+<div class="card">
+    <div class="card-header headline">
+        <h2>There are no articles at this time</h2>
+    </div>
+    <div class="card-body summary">Please use the "Check for new articles" button at the top of the window to retrieve new articles</div>
+    <div class="card-footer">
+    </div>
+</div>
+{{/if}}
