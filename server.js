@@ -52,21 +52,21 @@ mongoose.connect(MONGODB_URI);
 
 // Routes
 
-app.get("/", function(req, res) {
+app.get("/", (req, res) => {
     db.Article.find({}).sort({ _id: -1 })
-        .populate("comment").then(function(articles) {
+        .populate("comment").then(articles => {
             res.render("index", { articles: articles })
         })
 })
 
 // A GET route for scraping engadget.
-app.get("/scrape", function(req, res) {
+app.get("/scrape", (req, res) => {
     // First, we grab the body of the html with axios
-    axios.get("http://engadget.com/").then(function(response) {
+    axios.get("http://engadget.com/").then(response => {
         // Then, we load that into cheerio and save it to $ for a shorthand selector
         var $ = cheerio.load(response.data);
         // Now, we grab every article tag, in the 'latest news' section, and do the following:
-        $('section:contains("Latest")').find("article").each(function(i, element) {
+        $('section:contains("Latest")').find("article").each(function() {
             // Save an empty result object
             var result = {};
 
@@ -82,11 +82,11 @@ app.get("/scrape", function(req, res) {
                 .attr("href") || $(this).children("a").attr("href"));
             // Create a new Article using the `result` object built from scraping
             db.Article.create(result)
-                .then(function(dbArticle) {
+                .then(dbArticle => {
                     // View the added result in the console
                     console.log(dbArticle);
                 })
-                .catch(function(err) {
+                .catch(err => {
                     // If an error occurred, log it
                     console.log(err);
                 });
@@ -97,45 +97,47 @@ app.get("/scrape", function(req, res) {
 });
 
 // Route for grabbing a specific Article by id, populate it with comments
-app.get("/articles/:id", function(req, res) {
+app.get("/articles/:id", (req, res) => {
     // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
     db.Article.findOne({ _id: req.params.id })
-        // ..and populate all of the notes associated with it
+        // ..and populate all of the Comments associated with it
         .populate("comment")
-        .then(function(dbArticle) {
+        .then((dbArticle) => {
             // If we were able to successfully find an Article with the given id, send it back to the client
             res.json(dbArticle);
         })
-        .catch(function(err) {
+        .catch((err) => {
             // If an error occurred, send it to the client
             res.json(err);
         });
 });
 
-// Route for saving/updating an Article's associated Note
-app.post("/articles/:id", function(req, res) {
-    // Create a new note and pass the req.body to the entry
+// Route for saving/updating an Article's associated Comment
+app.post("/articles/:id", (req, res) => {
+    // Create a new Comment and pass the req.body to the entry
     db.Comment.create(req.body)
-        .then(function(dbComment) {
+        .then(dbComment => {
             // If a Comment was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Comment
             // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
             // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
             return db.Article.findOneAndUpdate({ _id: req.params.id }, { $push: { comment: dbComment._id } }, { new: true });
         })
-        .then(function(dbArticle) {
+        .then(dbArticle => {
             // If we were able to successfully update an Article, send it back to the client
             res.json(dbArticle);
         })
-        .catch(function(err) {
+        .catch(err => {
             // If an error occurred, send it to the client
             res.json(err);
         });
 });
 
-app.get("/remove/:id", function(req, res) {
-    db.Comment.deleteOne({ _id: req.params.id }).then(function(data) {
+//Route for removing a Comment from an Article
+app.get("/remove/:id", (req, res) => {
+    db.Comment.deleteOne({ _id: req.params.id }).then(() => {
+        // Pull functionality: https://docs.mongodb.com/manual/reference/operator/update/pull/
         return db.Article.findOneAndUpdate({ comment: req.params.id }, { $pull: { comment: req.params.id } })
-            .then((data) => {
+            .then(data => {
                 res.json(data)
             })
             .catch(err => {
@@ -145,6 +147,6 @@ app.get("/remove/:id", function(req, res) {
 })
 
 // Start the server
-app.listen(PORT, function() {
+app.listen(PORT, () => {
     console.log("App running at http://localhost:" + PORT);
 });

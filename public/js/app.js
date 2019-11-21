@@ -1,6 +1,6 @@
 $(function() {
-    $("#getNews").click(function() {
-        $.get("/scrape").then(function() {
+    $("#getNews").click(() => {
+        $.get("/scrape").then(() => {
             location.reload();
         })
     });
@@ -21,5 +21,9 @@ $(function() {
             console.log(data);
             location.reload()
         })
+    });
+
+    $(".modal").on("shown.bs.modal", function() {
+        $(this).find("textarea").focus();
     })
 })
